@@ -30,26 +30,26 @@ public interface LibraryService extends Remote{
 	
 	Books getBookById(int id) throws RemoteException;
 	
-	List<Books> getBookByName(String name) throws RemoteException;
+	List<Books> searchBooks(String name) throws RemoteException;
 	
 	boolean addBook(Books book) throws RemoteException;
 	
 	boolean updateBook(Books book) throws RemoteException;
 	
-	boolean deleteBook(int bookId) throws RemoteException;
+	boolean deleteBook(int bookId, Users currentUser) throws RemoteException;
 	
 	boolean borrowBook(int bookId,String username) throws RemoteException;
 	
 	boolean returnBook(int bookId, String username) throws RemoteException;
 	
 //	Admin method
-	int totalBook() throws RemoteException;
+	public int totalBook() throws RemoteException;
+
+	public int totalUser() throws RemoteException;
 	
-	int totalUser() throws RemoteException;
+	public int totalBorrowBook() throws RemoteException;
 	
-	int totalBorrowBook() throws RemoteException;
-	
-	int getAvailableBook() throws RemoteException;
+	public int getAvailableBook() throws RemoteException;
 	
 //  Callback
 	
