@@ -1,67 +1,62 @@
 package Interface;
 
-import Model.Books;
-import Model.BorrowRecord;
-import Model.Users;
-
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
 
-public interface LibraryService extends Remote {
+import Model.Books;
+import Model.Users;
 
-    // Auth
+public interface LibraryService extends Remote{
+    //	Auth method
     Users login(String username, String password) throws RemoteException;
-
     boolean register(Users user) throws RemoteException;
 
-    // User
-    List<Users> getAllUsers() throws RemoteException;
+    //  User method
+    List<Users> getAllUser() throws RemoteException;
 
     Users getUserById(int id) throws RemoteException;
+
+    List<Users> getAllUserByName(String name) throws RemoteException;
 
     boolean addUser(Users user) throws RemoteException;
 
     boolean deleteUser(int userId) throws RemoteException;
 
-    boolean updateUser(Users users) throws RemoteException;
+    boolean updateUser(Users user) throws RemoteException;
 
-    List<Users> getUserByName(String name) throws RemoteException;
-
-    // Book Management
-    List<Books> getAllBooks() throws RemoteException;
+    //	Book method
+    List<Books> getAllBook() throws RemoteException;
 
     Books getBookById(int id) throws RemoteException;
 
-    List<Books> searchBooks(String keyword) throws RemoteException;
+    List<Books> searchBooks(String name) throws RemoteException;
 
     boolean addBook(Books book) throws RemoteException;
 
     boolean updateBook(Books book) throws RemoteException;
 
-    boolean deleteBook(int bookId) throws RemoteException;
+    boolean deleteBook(int bookId, Users currentUser) throws RemoteException;
 
-    boolean borrowBook(int bookId, String username) throws RemoteException;
+    boolean borrowBook(int bookId,String username) throws RemoteException;
 
     boolean returnBook(int bookId, String username) throws RemoteException;
 
-    List<BorrowRecord> getBorrowHistory(String username) throws RemoteException;
+    //	Admin method
+    int totalBook() throws RemoteException;
 
-    List<BorrowRecord> getCurrentBorrows(String username) throws RemoteException;
+    int totalUser() throws RemoteException;
 
-    List<BorrowRecord> getAllBorrowRecords(String role) throws RemoteException;
+    int totalBorrowBook() throws RemoteException;
 
-    // Statistics
-    int getTotalBooks() throws RemoteException;
+    int getAvailableBook() throws RemoteException;
 
-    int getAvailableBooks() throws RemoteException;
+//  Callback
 
-    int getTotalBorrowedBooks() throws RemoteException;
-
-    int getTotalUsers() throws RemoteException;
-
-    // Callback
-    void registerCallback(String username, NotifyClient client) throws RemoteException;
+    void registerCallback(String username, Notify client) throws RemoteException;;
 
     void unregisterCallback(String username) throws RemoteException;
+
+
+
 }

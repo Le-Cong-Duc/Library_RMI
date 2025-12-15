@@ -1,21 +1,18 @@
 package Auth;
 
 import java.awt.Color;
-import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.Arrays;
 
 import javax.swing.*;
-
+import Notify.NotifyClientImplement;
 import Admin.AdminUI;
 import Interface.LibraryService;
-import Interface.NotifyClient;
+import Interface.Notify;
 import Model.Users;
-import Notify.NotifyClientImplement;
 import User.UserUI;
 
 public class LoginForm extends JFrame {
@@ -33,7 +30,7 @@ public class LoginForm extends JFrame {
 
     private LibraryService libraryService;
     private Users currentUser;
-    private NotifyClient callBack;
+    private Notify callBack;
 
     public LoginForm() {
         try {
@@ -181,12 +178,12 @@ public class LoginForm extends JFrame {
         setLocationRelativeTo(null);
 
         try {
-//            JTextArea notifycationArea = new JTextArea(5, 50);
-//            callBack = new NotifyClientImplement(notifycationArea);
-//            libraryService.registerCallback(currentUser.getUserName(), callBack);
+            JTextArea notifycationArea = new JTextArea(5, 50);
+            callBack = new NotifyClientImplement(notifycationArea);
+            libraryService.registerCallback(currentUser.getUserName(), callBack);
 
             if ("ADMIN".equals(currentUser.getRole())) {
-                setContentPane(new AdminUI());
+                setContentPane(new AdminUI(libraryService, currentUser, notifycationArea));
             } else {
                 setContentPane(new UserUI());
             }
