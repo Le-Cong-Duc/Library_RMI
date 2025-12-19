@@ -185,7 +185,7 @@ public class LoginForm extends JFrame {
             if ("ADMIN".equals(currentUser.getRole())) {
                 setContentPane(new AdminUI(libraryService, currentUser, notifycationArea));
             } else {
-                setContentPane(new UserUI());
+                setContentPane(new UserUI(libraryService, currentUser, notifycationArea));
             }
         } catch (Exception e) {
             System.out.println("Error in setUpRole: " + e.getMessage());

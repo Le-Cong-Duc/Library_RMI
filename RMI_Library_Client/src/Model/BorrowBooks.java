@@ -1,7 +1,9 @@
 package Model;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.util.Date;
 
 public class BorrowBooks implements Serializable{
 	
@@ -16,7 +18,7 @@ public class BorrowBooks implements Serializable{
 	public BorrowBooks() {}
 
 	public BorrowBooks(int id, String username, int bookId, String bookTitle, LocalDate borrowDate,
-			LocalDate returnDate, String status) {
+                       LocalDate returnDate, String status) {
 		super();
 		this.id = id;
 		this.username = username;
@@ -82,7 +84,7 @@ public class BorrowBooks implements Serializable{
 	public void setStatus(String status) {
 		this.status = status;
 	}
-	
+
 	@Override
 	public String toString() {
 		return String.format("%d|%s|%d|%s|%d|%d|%s",

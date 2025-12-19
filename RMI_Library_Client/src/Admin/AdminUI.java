@@ -329,10 +329,10 @@ public class AdminUI extends JPanel {
             txtAvailiable.setBounds(40, 438, 279, 38);
             dialog.add(txtAvailiable);
 
-            JLabel lblAvailible = new JLabel("Availible");
-            lblAvailible.setFont(new Font("Tahoma", Font.BOLD, 15));
-            lblAvailible.setBounds(40, 413, 96, 14);
-            dialog.add(lblAvailible);
+            JLabel lblAvailable = new JLabel("Available");
+            lblAvailable.setFont(new Font("Tahoma", Font.BOLD, 15));
+            lblAvailable.setBounds(40, 413, 96, 14);
+            dialog.add(lblAvailable);
 
             JLabel lblNewLabel_5 = new JLabel("Edit Book");
             lblNewLabel_5.setHorizontalAlignment(SwingConstants.CENTER);

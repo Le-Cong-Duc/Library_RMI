@@ -2,14 +2,17 @@ package Interface;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.time.LocalDate;
 import java.util.List;
 
 import Model.Books;
+import Model.BorrowBooks;
 import Model.Users;
 
-public interface LibraryService extends Remote{
+public interface LibraryService extends Remote {
     //	Auth method
     Users login(String username, String password) throws RemoteException;
+
     boolean register(Users user) throws RemoteException;
 
     //  User method
@@ -38,9 +41,14 @@ public interface LibraryService extends Remote{
 
     boolean deleteBook(int bookId, Users currentUser) throws RemoteException;
 
-    boolean borrowBook(int bookId,String username) throws RemoteException;
+    boolean borrowBook(int bookId, String username, String returnDate) throws RemoteException;
 
     boolean returnBook(int bookId, String username) throws RemoteException;
+
+    //    Borrow Book
+    List<BorrowBooks> getBorrowHistory(String username) throws RemoteException;
+
+    List<BorrowBooks> getCurrentBorrows(String username) throws RemoteException;
 
     //	Admin method
     int totalBook() throws RemoteException;
@@ -53,10 +61,11 @@ public interface LibraryService extends Remote{
 
 //  Callback
 
-    void registerCallback(String username, Notify client) throws RemoteException;;
+    void registerCallback(String username, Notify client) throws RemoteException;
+
+    ;
 
     void unregisterCallback(String username) throws RemoteException;
-
 
 
 }
