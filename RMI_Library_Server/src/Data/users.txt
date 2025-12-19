@@ -1,4 +1,3 @@
-thduong|2204|Nguyen Thi Thuy Duong|thuyduong22042005@gmail.com|USER
 lcduc|1801|Le Cong Duc|congduc@gmail.com|ADMIN
 ntd|2204|Thuy Duong|congduc@gmail.com|ADMIN
 ndt|1111|Duc Thuan|congduc@gmail.com|USER
