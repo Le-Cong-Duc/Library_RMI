@@ -1,6 +1,7 @@
-1|Tiên Nghịch|Nhĩ Căn|Tu Tiên|2|2
+1|Tiên Nghịch|Nhĩ Căn|Tu Tiên|2|1
 2|Đấu Pha Thương Khung|Thiên Tằm Thổ Đậu|Huyển Huyễn|3|3
 3|Nguyên Tôn|Thiên Tằm Thổ Đậu|Huyền Huyễn|1|1
-4|Kiếm Lai|Phong Hỏa Hí Chư Hầu|Tiên Hiệp|6|6
-5|Tru Tiên|Tiêu Đỉnh|Tu Tiên|2|2
-6|Đấu La Đại Lục|Đường Gia Tam Thiếu|Huyền Huyễn|4|4
+4|Kiếm Lai|Phong Hỏa Hí Chư Hầu|Tiên Hiệp|6|5
+5|Tru Tiên|Tiêu Đỉnh|Tu Tiên|2|1
+6|Đấu La Đại Lục|Đường Gia Tam Thiếu|Huyền Huyễn|4|2
+7|Vũ Động Càn Khôn|Thiên Tằm Thổ Đậu|Huyền Huyễn|3|3

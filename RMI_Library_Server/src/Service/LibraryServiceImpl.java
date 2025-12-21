@@ -107,35 +107,62 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
     }
 
     @Override
-    public Users getUserById(int id) throws RemoteException {
-        return null;
+    public List<Users> searchUser(String key) throws RemoteException {
+        String lowerKeyword = key.toLowerCase();
+        return users.values().stream()
+                .filter(b -> b.getUserName().toLowerCase().contains(lowerKeyword) ||
+                        b.getFullName().toLowerCase().contains(lowerKeyword) ||
+                        b.getEmail().toLowerCase().contains(lowerKeyword) ||
+                        b.getRole().toLowerCase().contains(lowerKeyword))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Users> getAllUserByName(String name) throws RemoteException {
-        return List.of();
+    public boolean addUser(Users user, String roleCurrent) throws RemoteException {
+        for (Users oldUser : users.values()) {
+            if (oldUser.getUserName().equalsIgnoreCase(user.getUserName())) {
+                return false;
+            }
+        }
+        users.put(user.getUserName(), user);
+
+        saveUser();
+        System.out.println("User added: " + user.getUserName());
+
+        notifyAddUser(user.getUserName(), roleCurrent);
+        return true;
     }
 
     @Override
-    public boolean addUser(Users user) throws RemoteException {
-        return false;
+    public boolean deleteUser(String username, String currentRole) throws RemoteException {
+        users.remove(username);
+        saveUser();
+        System.out.println("username:  " + username + " is deleted");
+
+        notifyDeleteUser(username, currentRole);
+        return true;
     }
 
     @Override
-    public boolean deleteUser(int userId) throws RemoteException {
-        return false;
-    }
+    public boolean updateUser(Users user, String currentRole) throws RemoteException {
+        Users oldUser = users.get(user.getUserName());
+        if (oldUser == null) {
+            return false;
+        }
 
-    @Override
-    public boolean updateUser(Users user) throws RemoteException {
-        return false;
+        users.put(user.getUserName(), user);
+
+        saveUser();
+        System.out.println(": User: " + user.getUserName() + " is edited!");
+        notifyEditUser(user.getUserName(), currentRole);
+        return true;
     }
 
     private void loadBook() {
         File file = new File(book_file);
         if (!file.exists()) {
             System.out.println("Error in loadBook - file not exists !!!");
-             books.clear();
+            books.clear();
             return;
         }
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
@@ -218,7 +245,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         saveBook();
         System.out.println("Book added: " + book.getBookName() + "(ID: " + book.getBookId() + ")");
 
-        notifyAllClient("New book: " + book.getBookName() + "is added !!!");
+        notifyBookAddedToClients(book.getBookName());
         return true;
     }
 
@@ -239,13 +266,13 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         books.put(updateBook.getBookId(), updateBook);
 
         saveBook();
-        System.out.println("Book edited!!!");
-        notifyAllClient("book: " + updateBook.getBookName() + "is edited !!!");
+        System.out.println(": Book ID: " + updateBook.getBookId() + " is edited!");
+        notifyBookEditToClients(updateBook.getBookName());
         return true;
     }
 
     @Override
-    public boolean deleteBook(int bookId, Users currentUser) throws RemoteException {
+    public boolean deleteBook(int bookId, String bookName, Users currentUser) throws RemoteException {
         boolean isBorrowed = borrowBooks.stream()
                 .anyMatch(r -> r.getBookId() == bookId && "BORROWED".equals(r.getStatus()));
 
@@ -255,13 +282,31 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         }
         books.remove(bookId);
         saveBook();
+
         System.out.println(currentUser.getUserName() + ": Book ID: " + bookId + " is deleted");
+
+        notifyBookDeleteToClients(bookName);
         return true;
     }
 
-    @Override
-    public boolean returnBook(int bookId, String username) throws RemoteException {
-        return false;
+    public List<BorrowBooks> getAllBorrowBook() throws RemoteException {
+        return borrowBooks.stream()
+                .sorted(Comparator.comparing(BorrowBooks::getBorrowDate).reversed())
+                .collect(Collectors.toList());
+    }
+
+    public List<BorrowBooks> searchBorrowBook(String key) throws RemoteException {
+        if (key == null || key.trim().isEmpty()) {
+            return getAllBorrowBook();
+        }
+        String lowerkey = key.toLowerCase();
+
+        return borrowBooks.stream()
+                .filter(b -> b.getUsername().toLowerCase().contains(lowerkey) ||
+                        b.getBookTitle().toLowerCase().contains(lowerkey) ||
+                        b.getStatus().toLowerCase().contains(lowerkey)
+                ).sorted(Comparator.comparing(BorrowBooks::getBorrowDate).reversed())
+                .collect(Collectors.toList());
     }
 
     private void loadBorrowBooks() {
@@ -305,7 +350,39 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
     }
 
     @Override
-    public boolean borrowBook(int bookId, String username, String returnDate) throws RemoteException {
+    public boolean returnBook(int bookId, String bookName, String username) throws RemoteException {
+
+        for (BorrowBooks borrow : borrowBooks) {
+            if (borrow.getUsername().equals(username)
+                    && borrow.getBookId() == bookId
+                    && "BORROWED".equals(borrow.getStatus())) {
+
+                // cập nhật số sách còn lại
+                Books book = books.get(bookId);
+                if (book != null) {
+                    book.setAvailable(book.getAvailable() + 1);
+                    saveBook();
+                }
+
+                // cập nhật trạng thái mượn
+                borrow.setStatus("RETURNED");
+                borrow.setRetrunDate(LocalDate.now());
+                saveBorrowBooks();
+
+                System.out.println("Book " + borrow.getBookTitle() + " is returned");
+
+                notifyBookReturnToClients(bookName, bookId);
+
+                return true;
+            }
+        }
+
+        System.out.println("Return failed: No borrow record found");
+        return false;
+    }
+
+    @Override
+    public boolean borrowBook(int bookId, String bookName, String username, LocalDate returnDate) throws RemoteException {
         Books book = books.get(bookId);
         if (book == null || book.getAvailable() <= 0) {
             System.out.println("Borrow failed: Book not available (ID: " + bookId + ")");
@@ -323,19 +400,20 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         book.setAvailable(book.getAvailable() - 1);
 
         BorrowBooks borrow = new BorrowBooks();
-        borrow.setId(nextBookId++);
+        borrow.setId(nextBorrowId++);
         borrow.setUsername(username);
         borrow.setBookId(bookId);
         borrow.setBookTitle(book.getBookName());
         borrow.setBorrowDate(LocalDate.now());
-        borrow.setRetrunDate(LocalDate.parse(returnDate));
+        borrow.setRetrunDate(returnDate);
         borrow.setStatus("BORROWED");
 
         borrowBooks.add(borrow);
         saveBook();
         saveBorrowBooks();
 
-        System.out.println("Book borrowed: " + book.getBookName() + " by " + username);
+        notifyBookBorrowToClients(bookName, bookId);
+
         return true;
     }
 
@@ -366,7 +444,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
 
     @Override
     public int totalBorrowBook() throws RemoteException {
-        return 0;
+        return borrowBooks.size();
     }
 
     @Override
@@ -386,12 +464,92 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         System.out.println("Client callback unregistered: " + username);
     }
 
+    private void notifyAddUser(String username, String role) {
+        for (Notify client : clientCallBack.values()) {
+            try {
+                client.notifyUserAdded(username, role);
+            } catch (Exception e) {
+                System.out.println("Failed to notify user added");
+            }
+        }
+    }
+
+    private void notifyDeleteUser(String username, String role) {
+        for (Notify client : clientCallBack.values()) {
+            try {
+                client.notifyUserDelete(username, role);
+            } catch (Exception e) {
+                System.out.println("Failed to notify user added");
+            }
+        }
+    }
+
+    private void notifyEditUser(String username, String role) {
+        for (Notify client : clientCallBack.values()) {
+            try {
+                client.notifyUserUpdated(username, role);
+            } catch (Exception e) {
+                System.out.println("Failed to notify user added");
+            }
+        }
+    }
+
     private void notifyAllClient(String mesage) {
         for (Map.Entry<String, Notify> entry : clientCallBack.entrySet()) {
             try {
                 entry.getValue().notifyMessage(mesage);
             } catch (Exception e) {
                 System.out.println("Failed to notify client " + entry.getKey());
+            }
+        }
+    }
+
+    private void notifyBookAddedToClients(String bookTitle) {
+        for (Notify client : clientCallBack.values()) {
+            try {
+                client.notifyBookAdded(bookTitle);
+            } catch (Exception e) {
+                System.out.println("Failed to notify book added");
+            }
+        }
+    }
+
+    private void notifyBookDeleteToClients(String bookTitle) {
+        for (Notify client : clientCallBack.values()) {
+            try {
+                client.notifyBookDeleted(bookTitle);
+            } catch (Exception e) {
+                System.out.println("Failed to notify book added");
+            }
+        }
+    }
+
+    private void notifyBookEditToClients(String bookTitle) {
+        for (Notify client : clientCallBack.values()) {
+            try {
+                client.notifyBookEdit(bookTitle);
+            } catch (Exception e) {
+                System.out.println("Failed to notify book added");
+            }
+        }
+    }
+
+    private void notifyBookBorrowToClients(String bookTitle, int bookId) {
+        for (Notify client : clientCallBack.values()) {
+            try {
+                client.notifyBookBorrowed(bookTitle, bookId);
+            } catch (Exception e) {
+                System.out.println("Failed to notify book added");
+            }
+        }
+    }
+
+    private void notifyBookReturnToClients(String bookTitle, int bookId) {
+        for (Notify client : clientCallBack.values()) {
+            try {
+                client.notifyBookReturned(bookTitle, bookId);
+            } catch (Exception e) {
+                System.out.println("Failed to notify book added");
             }
         }
     }

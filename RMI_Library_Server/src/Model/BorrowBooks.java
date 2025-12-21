@@ -3,89 +3,95 @@ package Model;
 import java.io.Serializable;
 import java.time.LocalDate;
 
-public class BorrowBooks implements Serializable{
-	
-	private int id;
-	private String username;
-	private int bookId;
-	private String bookTitle;
-	private LocalDate borrowDate;
-	private LocalDate returnDate;
-	private String status;
-	
-	public BorrowBooks() {}
+public class BorrowBooks implements Serializable {
 
-	public BorrowBooks(int id, String username, int bookId, String bookTitle, LocalDate borrowDate,
-			LocalDate returnDate, String status) {
-		super();
-		this.id = id;
-		this.username = username;
-		this.bookId = bookId;
-		this.bookTitle = bookTitle;
-		this.borrowDate = borrowDate;
-		this.returnDate = returnDate;
-		this.status = status;
-	}
+    private int id;
+    private String username;
+    private int bookId;
+    private String bookTitle;
+    private LocalDate borrowDate;
+    private LocalDate returnDate;
+    private String status;
 
-	public int getId() {
-		return id;
-	}
+    public BorrowBooks() {
+    }
 
-	public void setId(int id) {
-		this.id = id;
-	}
+    public BorrowBooks(int id, String username, int bookId, String bookTitle, LocalDate borrowDate,
+                       LocalDate returnDate, String status) {
+        super();
+        this.id = id;
+        this.username = username;
+        this.bookId = bookId;
+        this.bookTitle = bookTitle;
+        this.borrowDate = borrowDate;
+        this.returnDate = returnDate;
+        this.status = status;
+    }
 
-	public String getUsername() {
-		return username;
-	}
+    public int getId() {
+        return id;
+    }
 
-	public void setUsername(String username) {
-		this.username = username;
-	}
+    public void setId(int id) {
+        this.id = id;
+    }
 
-	public int getBookId() {
-		return bookId;
-	}
+    public String getUsername() {
+        return username;
+    }
 
-	public void setBookId(int bookId) {
-		this.bookId = bookId;
-	}
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-	public String getBookTitle() {
-		return bookTitle;
-	}
+    public int getBookId() {
+        return bookId;
+    }
 
-	public void setBookTitle(String bookTitle) {
-		this.bookTitle = bookTitle;
-	}
+    public void setBookId(int bookId) {
+        this.bookId = bookId;
+    }
 
-	public LocalDate getBorrowDate() {
-		return borrowDate;
-	}
+    public String getBookTitle() {
+        return bookTitle;
+    }
 
-	public void setBorrowDate(LocalDate borrowDate) {
-		this.borrowDate = borrowDate;
-	}
+    public void setBookTitle(String bookTitle) {
+        this.bookTitle = bookTitle;
+    }
 
-	public LocalDate getRetrunDate() {
-		return returnDate;
-	}
+    public LocalDate getBorrowDate() {
+        return borrowDate;
+    }
 
-	public void setRetrunDate(LocalDate retrunDate) {
-		this.returnDate = retrunDate;
-	}
+    public void setBorrowDate(LocalDate borrowDate) {
+        this.borrowDate = borrowDate;
+    }
 
-	public String getStatus() {
-		return status;
-	}
+    public LocalDate getReturnDate() {
+        return returnDate;
+    }
 
-	public void setStatus(String status) {
-		this.status = status;
-	}
-	
-	@Override
-	public String toString() {
-		return String.format("%d|%s|%d|%s|%d|%d|%s",
-				id, username, bookId, bookTitle, borrowDate, returnDate, status);
-	}
+    public void setRetrunDate(LocalDate retrunDate) {
+        this.returnDate = retrunDate;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    @Override
+    public String toString() {
+        return id + "|" +
+                username + "|" +
+                bookId + "|" +
+                bookTitle + "|" +
+                borrowDate + "|" +
+                returnDate + "|" +
+                status;
+    }
 }
