@@ -568,4 +568,18 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
             }
         }
     }
+
+    public void shutdownServer() {
+        System.out.println("Server is shutting down...");
+
+        for (Notify callback : clientCallBack.values()) {
+            try {
+                callback.onServerShutdown();
+            } catch (Exception e) {
+                System.out.println("Client already disconnected");
+            }
+        }
+
+        clientCallBack.clear();
+    }
 }

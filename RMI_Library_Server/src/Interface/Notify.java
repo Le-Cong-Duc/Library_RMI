@@ -14,4 +14,5 @@ public interface Notify  extends Remote{
 	public void notifyBookDeleted(String bookTitle) throws RemoteException;
 	public void notifyBookEdit(String bookTitle) throws RemoteException;
 	public void notifyMessage(String message) throws RemoteException;
+	void onServerShutdown() throws RemoteException;
 }
