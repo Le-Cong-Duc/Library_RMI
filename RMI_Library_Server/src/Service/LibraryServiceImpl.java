@@ -44,7 +44,8 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
     public Users login(String username, String password) throws RemoteException {
         Users user = users.get(username);
         if (user != null && user.getPassword().equals(password)) {
-            System.out.println("Login succesful: " + username + "(" + user.getRole() + ")");
+            notifyLogin(username);
+            System.out.println("Login successfully: " + username + "(" + user.getRole() + ")");
             return user;
         } else {
             System.out.println("Login failed !!!" + username + " - " + password);
@@ -64,6 +65,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         return true;
     }
 
+    // USER METHOD =====================================================================================================
     private void loadUser() {
         File file = new File(user_file);
         if (!file.exists()) {
@@ -117,6 +119,10 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
                 .collect(Collectors.toList());
     }
 
+    public Users getUserByUsername(String username) throws RemoteException {
+        return users.get(username);
+    }
+
     @Override
     public boolean addUser(Users user, String roleCurrent) throws RemoteException {
         for (Users oldUser : users.values()) {
@@ -153,11 +159,13 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         users.put(user.getUserName(), user);
 
         saveUser();
-        System.out.println(": User: " + user.getUserName() + " is edited!");
+        System.out.println("User: " + user.getUserName() + " is edited !!! ");
+
         notifyEditUser(user.getUserName(), currentRole);
         return true;
     }
 
+    // BOOK METHOD =====================================================================================================
     private void loadBook() {
         File file = new File(book_file);
         if (!file.exists()) {
@@ -179,6 +187,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
                             Integer.parseInt(parts[4].trim()),
                             Integer.parseInt(parts[5].trim()));
                     books.put(id, book);
+
                     if (id >= nextBookId) {
                         nextBookId = id + 1;
                     }
@@ -222,13 +231,11 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
 
     @Override
     public boolean addBook(Books book) throws RemoteException {
-
         for (Books oldBook : books.values()) {
             if (oldBook.getBookName().equalsIgnoreCase(book.getBookName())
                     && oldBook.getAuthor().equalsIgnoreCase(book.getAuthor())
                     && oldBook.getCategory().equalsIgnoreCase(book.getCategory())) {
 
-                // cộng số lượng
                 oldBook.setQuantity(oldBook.getQuantity() + book.getQuantity());
                 oldBook.setAvailable(oldBook.getAvailable() + book.getQuantity());
 
@@ -237,7 +244,6 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
                 return true;
             }
         }
-
         book.setBookId(nextBookId++);
         book.setAvailable(book.getQuantity());
         books.put(book.getBookId(), book);
@@ -245,7 +251,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         saveBook();
         System.out.println("Book added: " + book.getBookName() + "(ID: " + book.getBookId() + ")");
 
-        notifyBookAddedToClients(book.getBookName());
+        notifyAddedBook(book.getBookName());
         return true;
     }
 
@@ -259,7 +265,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
 
         int newAvailable = updateBook.getQuantity() - borrowed;
         if (newAvailable < 0) {
-            newAvailable = 0; // chặn âm
+            newAvailable = 0;
         }
         updateBook.setAvailable(newAvailable);
 
@@ -267,7 +273,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
 
         saveBook();
         System.out.println(": Book ID: " + updateBook.getBookId() + " is edited!");
-        notifyBookEditToClients(updateBook.getBookName());
+        notifyUpdateBook(updateBook.getBookName());
         return true;
     }
 
@@ -277,7 +283,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
                 .anyMatch(r -> r.getBookId() == bookId && "BORROWED".equals(r.getStatus()));
 
         if (isBorrowed) {
-            System.out.println("Can not delete book : curretly borrowed");
+            System.out.println("Can not delete book : currently borrowed");
             return false;
         }
         books.remove(bookId);
@@ -285,30 +291,11 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
 
         System.out.println(currentUser.getUserName() + ": Book ID: " + bookId + " is deleted");
 
-        notifyBookDeleteToClients(bookName);
+        notifyDeleteBook(bookName);
         return true;
     }
 
-    public List<BorrowBooks> getAllBorrowBook() throws RemoteException {
-        return borrowBooks.stream()
-                .sorted(Comparator.comparing(BorrowBooks::getBorrowDate).reversed())
-                .collect(Collectors.toList());
-    }
-
-    public List<BorrowBooks> searchBorrowBook(String key) throws RemoteException {
-        if (key == null || key.trim().isEmpty()) {
-            return getAllBorrowBook();
-        }
-        String lowerkey = key.toLowerCase();
-
-        return borrowBooks.stream()
-                .filter(b -> b.getUsername().toLowerCase().contains(lowerkey) ||
-                        b.getBookTitle().toLowerCase().contains(lowerkey) ||
-                        b.getStatus().toLowerCase().contains(lowerkey)
-                ).sorted(Comparator.comparing(BorrowBooks::getBorrowDate).reversed())
-                .collect(Collectors.toList());
-    }
-
+    // BORROW BOOK METHOD ==============================================================================================
     private void loadBorrowBooks() {
         File file = new File(borrow_file);
         if (!file.exists()) {
@@ -334,7 +321,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
                 }
             }
         } catch (Exception e) {
-            System.err.println("Error loading borrow records: " + e.getMessage());
+            System.err.println("Error in loadBorrowBooks - LibraryImpl: " + e.getMessage());
         }
     }
 
@@ -345,47 +332,34 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
                 bw.newLine();
             }
         } catch (Exception e) {
-            System.err.println("Error in saveBorrowBooks() : " + e.getMessage());
+            System.err.println("Error in saveBorrowBooks - LibraryImpl : " + e.getMessage());
         }
     }
 
-    @Override
-    public boolean returnBook(int bookId, String bookName, String username) throws RemoteException {
+    public List<BorrowBooks> getAllBorrowBook() throws RemoteException {
+        return borrowBooks.stream()
+                .sorted(Comparator.comparing(BorrowBooks::getBorrowDate).reversed())
+                .collect(Collectors.toList());
+    }
 
-        for (BorrowBooks borrow : borrowBooks) {
-            if (borrow.getUsername().equals(username)
-                    && borrow.getBookId() == bookId
-                    && "BORROWED".equals(borrow.getStatus())) {
-
-                // cập nhật số sách còn lại
-                Books book = books.get(bookId);
-                if (book != null) {
-                    book.setAvailable(book.getAvailable() + 1);
-                    saveBook();
-                }
-
-                // cập nhật trạng thái mượn
-                borrow.setStatus("RETURNED");
-                borrow.setRetrunDate(LocalDate.now());
-                saveBorrowBooks();
-
-                System.out.println("Book " + borrow.getBookTitle() + " is returned");
-
-                notifyBookReturnToClients(bookName, bookId);
-
-                return true;
-            }
+    public List<BorrowBooks> searchBorrowBook(String key) throws RemoteException {
+        if (key == null || key.trim().isEmpty()) {
+            return getAllBorrowBook();
         }
+        String lower_key = key.toLowerCase();
 
-        System.out.println("Return failed: No borrow record found");
-        return false;
+        return borrowBooks.stream()
+                .filter(b -> b.getUsername().toLowerCase().contains(lower_key) ||
+                        b.getBookTitle().toLowerCase().contains(lower_key) ||
+                        b.getStatus().toLowerCase().contains(lower_key)
+                ).sorted(Comparator.comparing(BorrowBooks::getBorrowDate).reversed())
+                .collect(Collectors.toList());
     }
 
     @Override
     public boolean borrowBook(int bookId, String bookName, String username, LocalDate returnDate) throws RemoteException {
         Books book = books.get(bookId);
         if (book == null || book.getAvailable() <= 0) {
-            System.out.println("Borrow failed: Book not available (ID: " + bookId + ")");
             return false;
         }
         boolean alreadyBorrowed = borrowBooks.stream()
@@ -412,15 +386,43 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         saveBook();
         saveBorrowBooks();
 
-        notifyBookBorrowToClients(bookName, bookId);
+        notifyBorrowBook(bookName, bookId);
 
         return true;
     }
 
     @Override
+    public boolean returnBook(int bookId, String bookName, String username) throws RemoteException {
+        for (BorrowBooks borrow : borrowBooks) {
+            if (borrow.getUsername().equals(username)
+                    && borrow.getBookId() == bookId
+                    && "BORROWED".equals(borrow.getStatus())) {
+
+                Books book = books.get(bookId);
+                if (book != null) {
+                    book.setAvailable(book.getAvailable() + 1);
+                    saveBook();
+                }
+
+                borrow.setStatus("RETURNED");
+                borrow.setRetrunDate(LocalDate.now());
+                saveBorrowBooks();
+
+                System.out.println("Book " + borrow.getBookTitle() + " is returned");
+
+                notifyReturnBook(bookName, bookId);
+                return true;
+            }
+        }
+
+        System.out.println("Return failed: No borrow record found");
+        return false;
+    }
+
+    @Override
     public List<BorrowBooks> getBorrowHistory(String username) throws RemoteException {
         return borrowBooks.stream().
-                filter(r -> r.getUsername().equals(username))
+                filter(r -> r.getUsername().equals(username) && r.getStatus().equals("RETURNED"))
                 .sorted(Comparator.comparing(BorrowBooks::getBorrowDate).reversed())
                 .collect(Collectors.toList());
     }
@@ -432,6 +434,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
                 .collect(Collectors.toList());
     }
 
+    // SUM METHOD ======================================================================================================
     @Override
     public int totalBook() throws RemoteException {
         return books.values().stream().mapToInt(Books::getQuantity).sum();
@@ -452,6 +455,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         return books.values().stream().mapToInt(Books::getAvailable).sum();
     }
 
+    //REGISTER CALLBACK METHOD==========================================================================================
     @Override
     public void registerCallback(String username, Notify client) throws RemoteException {
         clientCallBack.put(username, client);
@@ -464,12 +468,33 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         System.out.println("Client callback unregistered: " + username);
     }
 
+    // NOTIFY METHOD====================================================================================================
+    private void notifyAllClient(String mesage) {
+        for (Map.Entry<String, Notify> entry : clientCallBack.entrySet()) {
+            try {
+                entry.getValue().notifyMessage(mesage);
+            } catch (Exception e) {
+                System.out.println("Failed to notify client " + entry.getKey());
+            }
+        }
+    }
+
     private void notifyAddUser(String username, String role) {
         for (Notify client : clientCallBack.values()) {
             try {
                 client.notifyUserAdded(username, role);
             } catch (Exception e) {
                 System.out.println("Failed to notify user added");
+            }
+        }
+    }
+
+    private void notifyLogin(String username) {
+        for (Notify client : clientCallBack.values()) {
+            try {
+                client.notifyLogin(username);
+            } catch (Exception e) {
+                System.out.println("Failed to notify login");
             }
         }
     }
@@ -494,17 +519,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         }
     }
 
-    private void notifyAllClient(String mesage) {
-        for (Map.Entry<String, Notify> entry : clientCallBack.entrySet()) {
-            try {
-                entry.getValue().notifyMessage(mesage);
-            } catch (Exception e) {
-                System.out.println("Failed to notify client " + entry.getKey());
-            }
-        }
-    }
-
-    private void notifyBookAddedToClients(String bookTitle) {
+    private void notifyAddedBook(String bookTitle) {
         for (Notify client : clientCallBack.values()) {
             try {
                 client.notifyBookAdded(bookTitle);
@@ -514,7 +529,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         }
     }
 
-    private void notifyBookDeleteToClients(String bookTitle) {
+    private void notifyDeleteBook(String bookTitle) {
         for (Notify client : clientCallBack.values()) {
             try {
                 client.notifyBookDeleted(bookTitle);
@@ -524,7 +539,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         }
     }
 
-    private void notifyBookEditToClients(String bookTitle) {
+    private void notifyUpdateBook(String bookTitle) {
         for (Notify client : clientCallBack.values()) {
             try {
                 client.notifyBookEdit(bookTitle);
@@ -534,7 +549,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         }
     }
 
-    private void notifyBookBorrowToClients(String bookTitle, int bookId) {
+    private void notifyBorrowBook(String bookTitle, int bookId) {
         for (Notify client : clientCallBack.values()) {
             try {
                 client.notifyBookBorrowed(bookTitle, bookId);
@@ -544,7 +559,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
         }
     }
 
-    private void notifyBookReturnToClients(String bookTitle, int bookId) {
+    private void notifyReturnBook(String bookTitle, int bookId) {
         for (Notify client : clientCallBack.values()) {
             try {
                 client.notifyBookReturned(bookTitle, bookId);

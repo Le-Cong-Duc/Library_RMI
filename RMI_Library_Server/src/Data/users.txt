@@ -1,4 +1,5 @@
+pkl|1111|Phan Khanh Ly|lypk.23it@vku.udn.vn|USER
+lemy|1111|Lê Mỹ Mỹ|mymy@gmail.com|USER
 lcduc|1801|Le Cong Duc|congduc@gmail.com|ADMIN
-ntd|2204|Thuy Duong|congduc@gmail.com|ADMIN
-ndt|1111|Duc Thuan|congduc@gmail.com|USER
+ndt|1111|Duc Thuan|ducthuan@gmail.com|USER
 nqa|1202|Quynh Anh|congduc@gmail.com|USER
