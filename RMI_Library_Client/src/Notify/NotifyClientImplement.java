@@ -10,16 +10,23 @@ import javax.swing.*;
 public class NotifyClientImplement extends UnicastRemoteObject implements Notify {
     private JTextArea txtNotification;
 
+    public void notifyLogin(String username) throws RemoteException {
+        SwingUtilities.invokeLater(() -> {
+            txtNotification.append(username + " is login success !!!\n");
+        });
+        System.out.println("Notification: login: " + username);
+    }
+
     public void notifyUserAdded(String username, String role) throws RemoteException {
         if (role.equals("ADMIN")) {
             SwingUtilities.invokeLater(() -> {
-                txtNotification.append(" User : '" + username + "đã được theem!\n");
+                txtNotification.append(" User : '" + username + " is added !!!\n");
             });
         }
         System.out.println("Notification: User is added - " + username);
     }
 
-    public void notifyUserDelete(String username, String role) throws RemoteException{
+    public void notifyUserDelete(String username, String role) throws RemoteException {
         if (role.equals("ADMIN")) {
             SwingUtilities.invokeLater(() -> {
                 txtNotification.append(" User : '" + username + "is deleted!\n");
@@ -27,10 +34,11 @@ public class NotifyClientImplement extends UnicastRemoteObject implements Notify
         }
         System.out.println("Notification: User is deleted - " + username);
     }
-    public void notifyUserUpdated(String username, String role) throws RemoteException{
+
+    public void notifyUserUpdated(String username, String role) throws RemoteException {
         if (role.equals("ADMIN")) {
             SwingUtilities.invokeLater(() -> {
-                txtNotification.append(" User : '" + username + "is edited!\n");
+                txtNotification.append(" User : '" + username + " is edited!!!\n");
             });
         }
         System.out.println("Notification: User is edited - " + username);
@@ -85,6 +93,18 @@ public class NotifyClientImplement extends UnicastRemoteObject implements Notify
             txtNotification.append(message + "\n");
         });
         System.out.println("Notification: " + message);
+    }
+    @Override
+    public void onServerShutdown() throws RemoteException {
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            JOptionPane.showMessageDialog(
+                    null,
+                    "Server đã đóng. Ứng dụng sẽ thoát!",
+                    "Server Shutdown",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            System.exit(0);
+        });
     }
 
 }

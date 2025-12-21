@@ -8,6 +8,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 import javax.swing.*;
+
 import Notify.NotifyClientImplement;
 import Admin.AdminUI;
 import Interface.LibraryService;
@@ -37,9 +38,7 @@ public class LoginForm extends JFrame {
             Registry registry = LocateRegistry.getRegistry("localhost", 2912);
             libraryService = (LibraryService) registry.lookup("Interface.LibraryService");
             System.out.println("Connect to server successfully!!!");
-
             showLogin();
-            setUpRole();
         } catch (Exception e) {
             System.out.println("Error in connect to server!!!");
             JOptionPane.showMessageDialog(this, "Can not connect to server !!!", "Error in connect to server", JOptionPane.ERROR_MESSAGE);
@@ -217,6 +216,7 @@ public class LoginForm extends JFrame {
             currentUser = libraryService.login(username, password);
             if (currentUser != null) {
                 loginDialog.dispose();
+                setUpRole();
             } else {
                 JOptionPane.showMessageDialog(loginDialog, "Wrong username or password !!!");
             }

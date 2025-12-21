@@ -8,6 +8,7 @@ import Model.Users;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -185,7 +186,52 @@ public class UserUI extends JPanel {
     }
 
     private JPanel showHistoryPanel() {
-        return null;
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // ===== Toolbar =====
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+
+        JButton btnRefresh = new JButton("Refresh");
+        btnRefresh.setBackground(new Color(155, 89, 182));
+        btnRefresh.setForeground(Color.BLACK);
+        btnRefresh.setFocusPainted(false);
+
+        toolbar.add(btnRefresh);
+
+        // ===== Table =====
+        String[] columns = {
+                "Title",
+                "Borrow Date",
+                "Return Date",
+                "Status"
+        };
+
+        DefaultTableModel historyTableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        JTable historyTable = new JTable(historyTableModel);
+        historyTable.setRowHeight(25);
+        historyTable.setFont(new Font("Arial", Font.PLAIN, 13));
+        historyTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
+        historyTable.getTableHeader().setBackground(new Color(26, 188, 156));
+        historyTable.getTableHeader().setForeground(Color.BLACK);
+
+        JScrollPane scrollPane = new JScrollPane(historyTable);
+
+        panel.add(toolbar, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        // ===== Load data =====
+        loadBorrowedHistory(historyTableModel);
+
+        btnRefresh.addActionListener(e -> loadBorrowedHistory(historyTableModel));
+
+        return panel;
     }
 
     private JPanel createBottomPanel() {
@@ -253,9 +299,8 @@ public class UserUI extends JPanel {
         }
 
         int bookId = (int) bookTableModel.getValueAt(selectedRow, 0);
-        String bookName = (String) bookTableModel.getValueAt(selectedRow,1);
+        String bookName = (String) bookTableModel.getValueAt(selectedRow, 1);
 
-        String bookTitle = (String) bookTableModel.getValueAt(selectedRow, 1);
         int available = (int) bookTableModel.getValueAt(selectedRow, 4);
 
         if (available <= 0) {
@@ -264,15 +309,15 @@ public class UserUI extends JPanel {
         }
 
         int confirm = JOptionPane.showConfirmDialog(this,
-                "You want to borrow: :\n" + bookTitle,
+                "You want to borrow: :\n" + bookName,
                 "Yes",
                 JOptionPane.YES_NO_OPTION);
 
         SpinnerDateModel dateModel = new SpinnerDateModel(
-                new java.util.Date(),   // ngày mặc định = hôm nay
-                null,                   // min
-                null,                   // max
-                java.util.Calendar.DAY_OF_MONTH
+                new Date(),
+                null,
+                null,
+                Calendar.DAY_OF_MONTH
         );
 
         JSpinner dateSpinner = new JSpinner(dateModel);
@@ -297,7 +342,7 @@ public class UserUI extends JPanel {
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                if (libraryService.borrowBook(bookId,bookName, currentUser.getUserName(), returnDate)) {
+                if (libraryService.borrowBook(bookId, bookName, currentUser.getUserName(), returnDate)) {
                     JOptionPane.showMessageDialog(this, "Mượn sách thành công!\nVui lòng trả sách đúng hạn.");
                     loadBooks();
                 } else {
@@ -322,6 +367,29 @@ public class UserUI extends JPanel {
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error in UserUI - loadBorrowedBooks: " + e.getMessage());
+        }
+    }
+
+    private void loadBorrowedHistory(DefaultTableModel model) {
+        try {
+            List<BorrowBooks> list =
+                    libraryService.getBorrowHistory(currentUser.getUserName());
+
+            model.setRowCount(0);
+
+            for (BorrowBooks borrow : list) {
+                model.addRow(new Object[]{
+                        borrow.getBookTitle(),
+                        borrow.getBorrowDate(),
+                        borrow.getReturnDate(),
+                        borrow.getStatus()
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Error in UserUI - loadBorrowedHistory: " + e.getMessage()
+            );
         }
     }
 
