@@ -9,27 +9,14 @@ import java.awt.Font;
 import java.util.List;
 import java.util.concurrent.Flow;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
 import Interface.LibraryService;
 import Model.Books;
+import Model.BorrowBooks;
 import Model.Users;
-
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 
 public class AdminUI extends JPanel {
 
@@ -39,6 +26,7 @@ public class AdminUI extends JPanel {
     private JTable bookTable;
     private DefaultTableModel bookTableModel;
     private JTextField txtSearch;
+    private JTabbedPane tabbedPane = new JTabbedPane();
 
     public AdminUI(LibraryService libraryService, Users currentUser, JTextArea txtNotify) {
         this.libraryService = libraryService;
@@ -87,6 +75,19 @@ public class AdminUI extends JPanel {
     }
 
     private JPanel createCenterPanel() {
+        tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(new Font("Arial", Font.BOLD, 14));
+
+        tabbedPane.addTab("Quản lý sách", showBookMangerPanel());
+        tabbedPane.addTab("Quản lý người dùng", showUserManagerPanel());
+        tabbedPane.addTab("Quản lý mượn trả", showBorrowBookManagerPanel());
+
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(tabbedPane);
+        return panel;
+    }
+
+    private JPanel showBookMangerPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
 
         JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
@@ -165,6 +166,141 @@ public class AdminUI extends JPanel {
         return panel;
     }
 
+    private JPanel showUserManagerPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // ===== Toolbar =====
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+
+        JTextField txtSearch = new JTextField(25);
+        txtSearch.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        JButton btnSearch = new JButton("Search");
+        btnSearch.setBackground(new Color(24, 140, 200));
+        btnSearch.setFocusPainted(false);
+
+        JButton btnRefresh = new JButton("Refresh");
+        btnRefresh.setBackground(new Color(155, 89, 182));
+        btnRefresh.setFocusPainted(false);
+
+        JButton btnDelete = new JButton("Delete");
+        btnDelete.setBackground(new Color(231, 76, 60));
+        btnDelete.setFocusPainted(false);
+
+        toolbar.add(new JLabel("Search user:"));
+        toolbar.add(txtSearch);
+        toolbar.add(btnSearch);
+        toolbar.add(Box.createHorizontalStrut(20));
+        toolbar.add(btnDelete);
+        toolbar.add(btnRefresh);
+
+        // ===== Table =====
+        String[] columns = {"ID", "Username", "Full Name", "Role"};
+        DefaultTableModel userTableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        JTable userTable = new JTable(userTableModel);
+        userTable.setRowHeight(25);
+        userTable.setFont(new Font("Arial", Font.PLAIN, 13));
+        userTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
+        userTable.getTableHeader().setBackground(new Color(26, 188, 156));
+        userTable.getTableHeader().setForeground(Color.BLACK);
+        userTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        JScrollPane scrollPane = new JScrollPane(userTable);
+
+        panel.add(toolbar, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        // ===== Load data =====
+        loadUsers(userTableModel);
+
+        // ===== Events =====
+        btnRefresh.addActionListener(e -> loadUsers(userTableModel));
+
+        btnSearch.addActionListener(e -> searchUser(txtSearch.getText(), userTableModel));
+
+        btnDelete.addActionListener(e -> deleteUser(userTable, userTableModel));
+
+        return panel;
+    }
+
+    private JPanel showBorrowBookManagerPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        // ===== Toolbar =====
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+
+        JTextField txtSearch = new JTextField(25);
+        txtSearch.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        JButton btnSearch = new JButton("Search");
+        btnSearch.setBackground(new Color(24, 140, 200));
+        btnSearch.setFocusPainted(false);
+        JButton btnRefresh = new JButton("Refresh");
+        btnRefresh.setBackground(new Color(155, 89, 182));
+        btnRefresh.setFocusPainted(false);
+
+        JButton btnReturn = new JButton("Confirm Return");
+        btnReturn.setBackground(new Color(46, 204, 113));
+        btnReturn.setFocusPainted(false);
+
+        toolbar.add(txtSearch);
+        toolbar.add(btnSearch);
+        toolbar.add(btnReturn);
+        toolbar.add(btnRefresh);
+
+        // ===== Table =====
+        String[] columns = {
+                "Borrow ID",
+                "Username",
+                "Book ID",
+                "Book Title",
+                "Borrow Date",
+                "Return Date",
+                "Status"
+        };
+
+        DefaultTableModel borrowTableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        JTable borrowTable = new JTable(borrowTableModel);
+        borrowTable.setRowHeight(25);
+        borrowTable.setFont(new Font("Arial", Font.PLAIN, 13));
+        borrowTable.getTableHeader().setFont(new Font("Arial", Font.BOLD, 13));
+        borrowTable.getTableHeader().setBackground(new Color(26, 188, 156));
+        borrowTable.getTableHeader().setForeground(Color.BLACK);
+        borrowTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        JScrollPane scrollPane = new JScrollPane(borrowTable);
+
+        panel.add(toolbar, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        // ===== Load data =====
+        loadBorrowBooks(borrowTableModel);
+
+        // ===== Events =====
+        btnRefresh.addActionListener(e -> loadBorrowBooks(borrowTableModel));
+
+        btnReturn.addActionListener(e -> confirmReturn(borrowTable, borrowTableModel));
+
+        btnSearch.addActionListener(e -> searchBorrowBook(txtSearch.getText(), borrowTableModel));
+
+        return panel;
+    }
+
+
     private JPanel createBottomPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         txtNotify.setEditable(false);
@@ -181,6 +317,7 @@ public class AdminUI extends JPanel {
 
     }
 
+    // method in book manager ------------------------------------
     private void showAddBook() {
         JDialog dialog = new JDialog();
         dialog.setSize(380, 591);
@@ -418,22 +555,23 @@ public class AdminUI extends JPanel {
 
     private void deleteBook() {
         int selectedRow = bookTable.getSelectedRow();
+
         if (selectedRow == -1) {
             JOptionPane.showMessageDialog(this, "Select book needs delete!");
             return;
         }
 
         int bookId = (int) bookTableModel.getValueAt(selectedRow, 0);
-        String bookTitle = (String) bookTableModel.getValueAt(selectedRow, 1);
+        String bookName = (String) bookTableModel.getValueAt(selectedRow, 1);
 
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Are you sure :\n" + bookTitle,
+                "Are you sure :\n" + bookName,
                 "Delete",
                 JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                if (libraryService.deleteBook(bookId, currentUser)) {
+                if (libraryService.deleteBook(bookId, bookName, currentUser)) {
                     JOptionPane.showMessageDialog(this, "Delete succcessfully !!!!");
                     loadBooks();
                 } else {
@@ -465,4 +603,159 @@ public class AdminUI extends JPanel {
         }
     }
 
+    // method in user manager ------------------------------------
+    private void loadUsers(DefaultTableModel model) {
+        try {
+            model.setRowCount(0);
+            for (Users user : libraryService.getAllUser()) {
+                model.addRow(new Object[]{
+                        user.getUserName(),
+                        user.getFullName(),
+                        user.getEmail(),
+                        user.getRole()
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
+        }
+    }
+
+    private void searchUser(String key, DefaultTableModel model) {
+        if (key.trim().isEmpty()) {
+            loadUsers(model);
+            return;
+        }
+        try {
+            List<Users> users = libraryService.searchUser(key);
+            model.setRowCount(0);
+            for (Users user : users) {
+                model.addRow(new Object[]{
+                        user.getUserName(),
+                        user.getFullName(),
+                        user.getEmail(),
+                        user.getRole()
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error in AdminUI -searchUser: " + e.getMessage());
+        }
+    }
+
+    private void deleteUser(JTable table, DefaultTableModel model) {
+        int selectedRow = table.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn user cần xoá!");
+            return;
+        }
+        String username = model.getValueAt(selectedRow, 0).toString();
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Bạn có chắc muốn xoá user: " + username + " ?",
+                "Xác nhận xoá",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                boolean result = libraryService.deleteUser(username, currentUser.getRole());
+
+                if (result) {
+                    JOptionPane.showMessageDialog(this, "Xoá user thành công!");
+                    loadUsers(model);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Xoá user thất bại!");
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Lỗi xoá user: " + e.getMessage());
+            }
+        }
+    }
+
+
+    // method in borrow book manager ------------------------------------
+    private void loadBorrowBooks(DefaultTableModel model) {
+        try {
+            model.setRowCount(0);
+            for (BorrowBooks borrow : libraryService.getAllBorrowBook()) {
+                model.addRow(new Object[]{
+                        borrow.getId(),
+                        borrow.getUsername(),
+                        borrow.getBookId(),
+                        borrow.getBookTitle(),
+                        borrow.getBorrowDate(),
+                        borrow.getReturnDate(),
+                        borrow.getStatus()
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
+        }
+    }
+
+    private void searchBorrowBook(String keyword, DefaultTableModel model) {
+        if (keyword.trim().isEmpty()) {
+            loadBorrowBooks(model);
+            return;
+        }
+        try {
+            List<BorrowBooks> borrows = libraryService.searchBorrowBook(keyword);
+            bookTableModel.setRowCount(0);
+            for (BorrowBooks borrow : borrows) {
+                bookTableModel.addRow(new Object[]{
+                        borrow.getBookId(),
+                        borrow.getUsername(),
+                        borrow.getBookTitle(),
+                        borrow.getBorrowDate(),
+                        borrow.getReturnDate(),
+                        borrow.getStatus()
+                });
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error in AdminUI -searchBorrowBook: " + e.getMessage());
+        }
+    }
+
+    private void confirmReturn(JTable table, DefaultTableModel model) {
+        int selectedRow = table.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn bản ghi mượn cần xác nhận trả!");
+            return;
+        }
+
+        int borrowId = Integer.parseInt(model.getValueAt(selectedRow, 0).toString());
+        String username = model.getValueAt(selectedRow, 1).toString();
+        int bookId = Integer.parseInt(model.getValueAt(selectedRow, 2).toString());
+        String bookName = model.getValueAt(selectedRow, 3).toString();
+        String status = model.getValueAt(selectedRow, 6).toString();
+
+        if (status.equalsIgnoreCase("RETURNED")) {
+            JOptionPane.showMessageDialog(this, "Sách này đã được trả rồi!");
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Xác nhận trả sách cho lượt mượn ID: " + borrowId + " ?",
+                "Confirm Return",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                boolean result = libraryService.returnBook(bookId, bookName, username);
+
+                if (result) {
+                    JOptionPane.showMessageDialog(this, "Xác nhận trả sách thành công!");
+                    loadBorrowBooks(model);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Xác nhận trả sách thất bại!");
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Lỗi confirm return: " + e.getMessage());
+            }
+        }
+    }
 }

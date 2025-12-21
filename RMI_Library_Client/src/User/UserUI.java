@@ -6,6 +6,9 @@ import Model.BorrowBooks;
 import Model.Users;
 
 import java.awt.*;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 
 import javax.swing.*;
@@ -250,6 +253,8 @@ public class UserUI extends JPanel {
         }
 
         int bookId = (int) bookTableModel.getValueAt(selectedRow, 0);
+        String bookName = (String) bookTableModel.getValueAt(selectedRow,1);
+
         String bookTitle = (String) bookTableModel.getValueAt(selectedRow, 1);
         int available = (int) bookTableModel.getValueAt(selectedRow, 4);
 
@@ -263,21 +268,36 @@ public class UserUI extends JPanel {
                 "Yes",
                 JOptionPane.YES_NO_OPTION);
 
-        String returnDate = JOptionPane.showInputDialog(
+        SpinnerDateModel dateModel = new SpinnerDateModel(
+                new java.util.Date(),   // ngày mặc định = hôm nay
+                null,                   // min
+                null,                   // max
+                java.util.Calendar.DAY_OF_MONTH
+        );
+
+        JSpinner dateSpinner = new JSpinner(dateModel);
+        JSpinner.DateEditor editor = new JSpinner.DateEditor(dateSpinner, "yyyy-MM-dd");
+        dateSpinner.setEditor(editor);
+
+        int option = JOptionPane.showConfirmDialog(
                 this,
-                "Return Date (yyyy-MM-dd):",
-                "Return Date",
+                dateSpinner,
+                "Select return date",
+                JOptionPane.OK_CANCEL_OPTION,
                 JOptionPane.PLAIN_MESSAGE
         );
 
-        if (returnDate == null || returnDate.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Return Date not Null!");
+        Date selectedDate = (Date) dateSpinner.getValue();
+
+        LocalDate returnDate = selectedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+        if (option != JOptionPane.OK_OPTION) {
             return;
         }
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                if (libraryService.borrowBook(bookId, currentUser.getUserName(), returnDate)) {
+                if (libraryService.borrowBook(bookId,bookName, currentUser.getUserName(), returnDate)) {
                     JOptionPane.showMessageDialog(this, "Mượn sách thành công!\nVui lòng trả sách đúng hạn.");
                     loadBooks();
                 } else {
@@ -297,12 +317,13 @@ public class UserUI extends JPanel {
                 tableModel.addRow(new Object[]{
                         book.getBookTitle(),
                         book.getBorrowDate(),
-                        book.getRetrunDate()
+                        book.getReturnDate()
                 });
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error in UserUI - loadBorrowedBooks: " + e.getMessage());
         }
-
     }
+
+
 }

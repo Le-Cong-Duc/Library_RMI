@@ -18,34 +18,36 @@ public interface LibraryService extends Remote {
     //  User method
     List<Users> getAllUser() throws RemoteException;
 
-    Users getUserById(int id) throws RemoteException;
+    List<Users> searchUser(String key) throws RemoteException;
 
-    List<Users> getAllUserByName(String name) throws RemoteException;
+    boolean addUser(Users user, String roleCurrentUser) throws RemoteException;
 
-    boolean addUser(Users user) throws RemoteException;
+    boolean deleteUser(String username, String currentRole) throws RemoteException;
 
-    boolean deleteUser(int userId) throws RemoteException;
-
-    boolean updateUser(Users user) throws RemoteException;
+    boolean updateUser(Users user, String currentRole) throws RemoteException;
 
     //	Book method
     List<Books> getAllBook() throws RemoteException;
 
     Books getBookById(int id) throws RemoteException;
 
-    List<Books> searchBooks(String name) throws RemoteException;
+    List<Books> searchBooks(String key) throws RemoteException;
 
     boolean addBook(Books book) throws RemoteException;
 
     boolean updateBook(Books book) throws RemoteException;
 
-    boolean deleteBook(int bookId, Users currentUser) throws RemoteException;
+    boolean deleteBook(int bookId, String bookName, Users currentUser) throws RemoteException;
 
-    boolean borrowBook(int bookId, String username, String returnDate) throws RemoteException;
+    boolean borrowBook(int bookId, String bookName, String username, LocalDate returnDate) throws RemoteException;
 
-    boolean returnBook(int bookId, String username) throws RemoteException;
+    boolean returnBook(int bookId, String bookName, String username) throws RemoteException;
 
     //    Borrow Book
+    public List<BorrowBooks> getAllBorrowBook() throws RemoteException;
+
+    public List<BorrowBooks> searchBorrowBook(String key) throws RemoteException;
+
     List<BorrowBooks> getBorrowHistory(String username) throws RemoteException;
 
     List<BorrowBooks> getCurrentBorrows(String username) throws RemoteException;
@@ -62,8 +64,6 @@ public interface LibraryService extends Remote {
 //  Callback
 
     void registerCallback(String username, Notify client) throws RemoteException;
-
-    ;
 
     void unregisterCallback(String username) throws RemoteException;
 

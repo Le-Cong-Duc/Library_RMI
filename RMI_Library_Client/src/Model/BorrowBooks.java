@@ -1,12 +1,10 @@
 package Model;
 
 import java.io.Serializable;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.Date;
 
-public class BorrowBooks implements Serializable{
-	
+public class BorrowBooks implements Serializable {
+
 	private int id;
 	private String username;
 	private int bookId;
@@ -14,11 +12,12 @@ public class BorrowBooks implements Serializable{
 	private LocalDate borrowDate;
 	private LocalDate returnDate;
 	private String status;
-	
-	public BorrowBooks() {}
+
+	public BorrowBooks() {
+	}
 
 	public BorrowBooks(int id, String username, int bookId, String bookTitle, LocalDate borrowDate,
-                       LocalDate returnDate, String status) {
+					   LocalDate returnDate, String status) {
 		super();
 		this.id = id;
 		this.username = username;
@@ -69,7 +68,7 @@ public class BorrowBooks implements Serializable{
 		this.borrowDate = borrowDate;
 	}
 
-	public LocalDate getRetrunDate() {
+	public LocalDate getReturnDate() {
 		return returnDate;
 	}
 
@@ -87,7 +86,12 @@ public class BorrowBooks implements Serializable{
 
 	@Override
 	public String toString() {
-		return String.format("%d|%s|%d|%s|%d|%d|%s",
-				id, username, bookId, bookTitle, borrowDate, returnDate, status);
+		return id + "|" +
+				username + "|" +
+				bookId + "|" +
+				bookTitle + "|" +
+				borrowDate + "|" +
+				returnDate + "|" +
+				status;
 	}
 }
