@@ -324,34 +324,52 @@ public class UserUI extends JPanel {
         JSpinner.DateEditor editor = new JSpinner.DateEditor(dateSpinner, "yyyy-MM-dd");
         dateSpinner.setEditor(editor);
 
-        int option = JOptionPane.showConfirmDialog(
-                this,
-                dateSpinner,
-                "Select return date",
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.PLAIN_MESSAGE
-        );
+        LocalDate returnDate;
+        while (true) {
+            int option = JOptionPane.showConfirmDialog(
+                    this,
+                    dateSpinner,
+                    "Select return date",
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.PLAIN_MESSAGE
+            );
 
-        Date selectedDate = (Date) dateSpinner.getValue();
+            if (option != JOptionPane.OK_OPTION) {
+                return;
+            }
 
-        LocalDate returnDate = selectedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            Date selectedDate = (Date) dateSpinner.getValue();
 
-        if (option != JOptionPane.OK_OPTION) {
-            return;
+            returnDate = selectedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+            if (returnDate.isBefore(LocalDate.now())) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Return date must be after borrow day!",
+                        "Invalid return date",
+                        JOptionPane.WARNING_MESSAGE
+                );
+            } else {
+                break;
+            }
         }
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 if (libraryService.borrowBook(bookId, bookName, currentUser.getUserName(), returnDate)) {
-                    JOptionPane.showMessageDialog(this, "Mượn sách thành công!\nVui lòng trả sách đúng hạn.");
+                    JOptionPane.showMessageDialog(this, "Borrow Book Successfully !\n Vui lòng trả sách đúng hạn.");
                     loadBooks();
                 } else {
-                    JOptionPane.showMessageDialog(this, "Mượn sách thất bại!\nBạn có thể đã mượn sách này rồi.");
+                    JOptionPane.showMessageDialog(this, "Borrow Book Failed!\n Bạn có thể đã mượn sách này rồi.");
                 }
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "Lỗi: " + e.getMessage());
             }
         }
+    }
+
+    private static void extracted() {
+        int option;
     }
 
     private void loadBorrowedBooks(DefaultTableModel tableModel) {

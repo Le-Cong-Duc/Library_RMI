@@ -505,9 +505,30 @@ public class AdminUI extends JPanel {
             int bookId = (int) bookTableModel.getValueAt(selectedRow, 0);
             int available = (int) bookTableModel.getValueAt(selectedRow, 4);
 
+            String username = txtUsername.getText().trim();
+            if (username.isEmpty()) {
+                JOptionPane.showMessageDialog(
+                        dialog,
+                        "Username cannot be empty!",
+                        "Invalid input",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
+
             Date selectedDate = (Date) dataSpinner.getValue();
 
             LocalDate returnDate = selectedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+            if (returnDate.isBefore(LocalDate.now())) {
+                JOptionPane.showMessageDialog(
+                        dialog,
+                        "Return date must be after today!",
+                        "Invalid return date",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                return;
+            }
 
             if (available <= 0) {
                 JOptionPane.showMessageDialog(this, "Out of books!");
@@ -515,14 +536,14 @@ public class AdminUI extends JPanel {
             }
 
             try {
-                boolean result = libraryService.borrowBook(bookId, bookName, txtUsername.getText(), returnDate);
+                boolean result = libraryService.borrowBook(bookId, bookName, username, returnDate);
 
                 if (result) {
-                    JOptionPane.showMessageDialog(this, "Borrow book is successfully!!!\nVui lòng trả sách đúng hạn.");
+                    JOptionPane.showMessageDialog(this, "Borrow book is successfully for :" + username);
                     loadBooks();
                     dialog.dispose();
                 } else {
-                    JOptionPane.showMessageDialog(this, "Borrow book is failed \n You may have already borrowed this book!!!");
+                    JOptionPane.showMessageDialog(this, "Borrow book is failed \n " + username + " may have already borrowed this book!!!");
                 }
 
             } catch (Exception ex) {
