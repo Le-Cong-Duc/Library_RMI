@@ -8,11 +8,13 @@ import java.rmi.registry.Registry;
 public class MainServer {
     public static void main(String[] args) throws RemoteException {
         LibraryServiceImpl libraryService = null;
+        String SERVER_IP = "172.26.21.242";
         int PORT = 2912;
         try {
+            System.setProperty("java.rmi.server.hostname", SERVER_IP);
             Registry registry = LocateRegistry.createRegistry(PORT);
             libraryService = new LibraryServiceImpl();
-            registry.rebind("Interface.LibraryService", libraryService);
+            registry.rebind("LibraryService", libraryService);
             System.out.println("Server is running in port : " + PORT);
         } catch (Exception e) {
             System.out.println("Lỗi server: " + e.getMessage());

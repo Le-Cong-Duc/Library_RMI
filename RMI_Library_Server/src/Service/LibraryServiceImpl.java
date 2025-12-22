@@ -370,6 +370,12 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
             System.out.println("Borrow failed: User already borrowed this book");
             return false;
         }
+        if (!users.containsKey(username)) {
+            System.out.println("Borrow failed: User does not exist");
+            return false;
+        }
+
+        if (returnDate.isBefore(LocalDate.now())) return false;
 
         book.setAvailable(book.getAvailable() - 1);
 
