@@ -35,13 +35,19 @@ public class LoginForm extends JFrame {
 
     public LoginForm() {
         try {
-            Registry registry = LocateRegistry.getRegistry("localhost", 2912);
-            libraryService = (LibraryService) registry.lookup("Interface.LibraryService");
-            System.out.println("Connect to server successfully!!!");
+            String SERVER_IP = "192.168.63.115";
+            int SERVER_PORT = 2912;
+
+            Registry registry = LocateRegistry.getRegistry(SERVER_IP, SERVER_PORT);
+            libraryService = (LibraryService) registry.lookup("LibraryService");
+
+            System.out.println(" Connected to RMI Server");
+
             showLogin();
         } catch (Exception e) {
             System.out.println("Error in connect to server!!!");
-            JOptionPane.showMessageDialog(this, "Can not connect to server !!!", "Error in connect to server", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Can not connect to server !!!", "Error in connect to server",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -60,11 +66,13 @@ public class LoginForm extends JFrame {
 
         txtUsername = new JTextField();
         txtUsername.setBounds(65, 133, 331, 46);
+        txtUsername.setFont(new Font("Tahoma", Font.BOLD, 12));
         loginDialog.add(txtUsername);
         txtUsername.setColumns(10);
 
         txtPassword = new JPasswordField();
         txtPassword.setBounds(65, 224, 331, 46);
+        txtPassword.setFont(new Font("Tahoma", Font.BOLD, 12));
         loginDialog.add(txtPassword);
 
         lblUsername = new JLabel("Username :");
@@ -173,7 +181,7 @@ public class LoginForm extends JFrame {
     public void setUpRole() {
         setTitle("Library System - " + currentUser.getFullName() + " (" + currentUser.getRole() + ")");
         setSize(1000, 700);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
         try {

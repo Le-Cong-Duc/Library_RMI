@@ -1,11 +1,6 @@
 package Admin;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.EventQueue;
-import java.awt.FlowLayout;
-import java.awt.Font;
+import java.awt.*;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Calendar;
@@ -17,13 +12,13 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
+import Auth.LoginForm;
 import Interface.LibraryService;
 import Model.Books;
 import Model.BorrowBooks;
 import Model.Users;
 
 public class AdminUI extends JPanel {
-
     private LibraryService libraryService;
     private Users currentUser;
     private JTextArea txtNotify;
@@ -66,7 +61,13 @@ public class AdminUI extends JPanel {
         btnLogout.setBackground(Color.BLUE);
         btnLogout.setForeground(Color.BLACK);
         btnLogout.setFocusPainted(false);
-        btnLogout.addActionListener(e -> System.exit(0));
+        btnLogout.addActionListener(e -> {
+            JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
+            frame.dispose();
+
+            SwingUtilities.invokeLater(() -> new LoginForm().setVisible(true));
+        });
+
 
         rightPanel.add(lblUser);
         rightPanel.add(Box.createHorizontalStrut(10));
@@ -557,7 +558,6 @@ public class AdminUI extends JPanel {
         dialog.add(btnConfirm);
         dialog.setVisible(true);
     }
-
 
     private JPanel showBorrowBookManagerPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
@@ -1088,4 +1088,5 @@ public class AdminUI extends JPanel {
             }
         }
     }
+
 }

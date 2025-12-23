@@ -1,5 +1,6 @@
 package User;
 
+import Auth.LoginForm;
 import Interface.LibraryService;
 import Model.Books;
 import Model.BorrowBooks;
@@ -59,7 +60,12 @@ public class UserUI extends JPanel {
         btnLogout.setBackground(new Color(0, 0, 0));
         btnLogout.setForeground(Color.BLACK);
         btnLogout.setFocusPainted(false);
-        btnLogout.addActionListener(e -> System.exit(0));
+        btnLogout.addActionListener(e -> {
+            JFrame frame = (JFrame) SwingUtilities.getWindowAncestor(this);
+            frame.dispose();
+
+            SwingUtilities.invokeLater(() -> new LoginForm().setVisible(true));
+        });
 
         rightPanel.add(lblUser);
         rightPanel.add(Box.createHorizontalStrut(10));
@@ -368,10 +374,6 @@ public class UserUI extends JPanel {
         }
     }
 
-    private static void extracted() {
-        int option;
-    }
-
     private void loadBorrowedBooks(DefaultTableModel tableModel) {
         try {
             List<BorrowBooks> list = libraryService.getCurrentBorrows(currentUser.getUserName());
@@ -410,6 +412,4 @@ public class UserUI extends JPanel {
             );
         }
     }
-
-
 }
